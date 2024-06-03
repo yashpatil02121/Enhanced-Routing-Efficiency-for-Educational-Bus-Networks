@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <title>Bus Routes</title>
+    <style>
+        #map { height: 1350px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        // Load bus routes from external JavaScript file
+        const script = document.createElement('script');
+        script.src = 'bus_routes.js';
+        script.onload = function() {
+            plotBusRoutes(busRoutes);
+        };
+        document.head.appendChild(script);
+
+        function plotBusRoutes(busRoutes) {
+            busRoutes.forEach((route, index) => {
+                const coordinates = route.map((node, i) => [node.latitude, node.longitude, i]);
+                L.Routing.control({
+                    waypoints: coordinates.map(coord => L.latLng(coord[0], coord[1])),
+                    routeWhileDragging: true,
+                    lineOptions: {
+                        styles: [{ color: getColor(index), weight: 5 }]
+                    },
+                    createMarker: function(i, waypoint, n) {
+                        // Customize the waypoint marker to display numbers
+                        return L.marker(waypoint.latLng, {
+                            draggable: true,
+                            icon: L.divIcon({ className: 'leaflet-div-icon', html: '<span>' + coordinates[i][2] + '</span>' })
+                        });
+                    }
+                }).addTo(map);
+            });
+        }
+
+        // function plotBusRoutes(busRoutes) {
+        //     busRoutes.forEach((route, busIndex) => {
+        //         let coordinateIndex = 1; // Start index for coordinates
+
+        //         route.forEach((node, index) => {
+        //             const coordinates = [node.latitude, node.longitude];
+        //             const markerHtml = `<span>${coordinateIndex}</span>`; // Use coordinateIndex as marker label
+        //             const marker = L.marker(coordinates, {
+        //                 icon: L.divIcon({ className: 'leaflet-div-icon', html: markerHtml })
+        //             }).addTo(map);
+        //             coordinateIndex++; // Increment index for each coordinate
+        //         });
+        //     });
+        // }
+
+
+        function getColor(index) {
+            const colors = ['#ff0000', '#f0ff00', '#0000ff', '#ff00ff'];
+            return colors[index % colors.length];
+        }
+
+        const map = L.map('map').setView([40.629041, -74.025606], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    </script>
+</body>
+</html>
